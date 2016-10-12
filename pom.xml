@@ -68,10 +68,63 @@
 	</dependencies>
 
 	<build>
+		<finalName>hello-customer</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.16.7</version>
+				<configuration>
+					<images>
+						<image>
+							<name>tt/base</name>
+							<build>
+								<from>openjdk:8-jdk-alpine</from>
+								<runCmds>
+									<runCmd>adduser -h /service -g 'Spring Boot Service' -D service</runCmd>
+								</runCmds>
+								<optimise>true</optimise>
+								<tags>
+									<tag>latest</tag>
+									<tag>${project.version}</tag>
+								</tags>
+							</build>
+						</image>
+						<image>
+							<name>tt/hello-customer</name>
+							<build>
+								<from>tt/base:${project.version}</from>
+								<user>service</user>
+								<workdir>/service</workdir>
+								<entryPoint>
+									<exec>
+										<arg>java</arg>
+										<arg>-Djava.security.egd=file:/dev/./urandom</arg>
+										<arg>-jar</arg>
+										<arg>${project.build.finalName}.jar</arg>
+									</exec>
+								</entryPoint>
+								<assembly>
+									<basedir>/service</basedir>
+									<exportBasedir>false</exportBasedir>
+									<descriptorRef>artifact</descriptorRef>
+									<user>service:service</user>
+								</assembly>
+								<ports>
+									<port>8080</port>
+								</ports>
+								<tags>
+									<tag>latest</tag>
+									<tag>${project.version}</tag>
+								</tags>
+							</build>
+						</image>
+					</images>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
